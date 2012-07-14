@@ -1,36 +1,29 @@
 var gm = require('gm');
 var http = require('http');
-var fs = require('fs');
+var url = require('url');
 
-var server = http.createServer( function(req, res) {
+http.createServer( function(req, res) {
+	var path = url.parse(req.url).pathname;
+	var fileName = path.replace('/img/','');
 
-	gm('/home/jgonzalez/0009_cc0640_001_12U.jpg')
-	        .quality(70)
-	        .noProfile()
-		.stream(function(err, stdout, stderr) {
-			if (err) {
-				console.log('Error processing image', err)	
-			} else {
-				var file = fs.createWriteStream("temp.jpg");
-				res.writeHead(200, { 'Content-Type':'image/jpg' });
-				res.write(file);
-				res.end();		
-			}
-		}
-	);
-});
-
-server.listen(8080);
-
-/*
-gm('/home/jgonzalez/0009_cc0640_001_12U.jpg')
+	gm(__dirname + '/img/' + fileName)
 	.quality(70)
 	.noProfile()
-	.write(dir + '/test.jpg', function (err) {
-		if (err) return console.dir(arguments)
-		console.log(this.outname + " created :: " + arguments[3])
-	}
-)
-/*
+	.stream(function(err, stdout, stderr) {
+		if (err) {
+			console.error('Error', err);
+		} else {
+			
+			res.writeHead(200, { 'Content-Type': 'image/jpg' });
 
+			stdout.on('data', function(chunk) {
+				res.write(chunk);
+			});
 
+			stdout.on('end', function() {
+				res.end()
+			});
+		}
+	}); //stream
+	
+}).listen(8080);
